@@ -1,0 +1,52 @@
+FROM almalinux:8
+
+# Install dependencies
+RUN dnf -y update && \
+    dnf module enable -y nodejs:18 && \
+    dnf -y install \
+      nodejs \
+      npm \
+      git \
+      wget \
+      curl \
+      unzip \
+      tar \
+      libX11 \
+      libXcomposite \
+      libXcursor \
+      libXdamage \
+      libXext \
+      libXi \
+      libXtst \
+      cups-libs \
+      libXScrnSaver \
+      alsa-lib \
+      atk \
+      pango \
+      gtk3 \
+      nss \
+      libdrm \
+      xorg-x11-server-Xvfb \
+      which \
+      && dnf clean all
+
+# Add non-root user
+RUN useradd -ms /bin/bash agentuser
+
+# Set up work directory
+WORKDIR /home/agentuser
+
+# Install Puppeteer + Playwright and their dependencies as root
+RUN npm init -y && \
+    npm install puppeteer playwright
+RUN npx playwright install
+
+# Copy agent script and set ownership
+COPY agent.js ./agent.js
+RUN chown -R agentuser:agentuser /home/agentuser
+
+# Switch to the non-root user
+USER agentuser
+
+# Run agent on container start
+CMD ["node", "agent.js"]
