@@ -1,0 +1,14 @@
+{
+  "servers": {
+    "playwright": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["@playwright/mcp@latest"]
+    },
+    "sequentialthinking": {
+      "type": "stdio",
+      "command": "docker",
+      "args": ["run", "-i", "--rm", "mcp/sequentialthinking"]
+    }
+  }
+}

@@ -1,0 +1,27 @@
+version: '3.8'
+services:
+  chrome:
+    image: zenika/alpine-chrome:latest
+    # Run Chrome in headless mode, listening for remote debugging connections on all interfaces.
+    # --no-sandbox is often required for running Chrome in a container.
+    command: 'google-chrome --headless=new --remote-debugging-address=0.0.0.0 --remote-debugging-port=9222 --no-sandbox'
+    ports:
+      - "9222:9222"
+    # A larger shared memory size is recommended to prevent Chrome from crashing.
+    shm_size: '2g'
+
+  agent:
+    build:
+      context: ./agent
+    depends_on:
+      - chrome
+    # Mount the Docker socket to allow the agent to start other containers (e.g., sequentialthinking).
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    # Add an entry for host.docker.internal to allow the agent to connect to
+    # the Docker Model Runner running on the host.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    # Keep the container running so we can exec into it.
+    stdin_open: true
+    tty: true
