@@ -1,27 +1,70 @@
 version: '3.8'
+
 services:
+  model-runner:
+    image: mcp/model-runner:latest
+    ports:
+      - "8080:8080"
+    environment:
+      - LOG_LEVEL=debug
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    volumes:
+      - model-runner-data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
   chrome:
-    image: zenika/alpine-chrome:latest
-    # Run Chrome in headless mode, listening for remote debugging connections on all interfaces.
-    # --no-sandbox is often required for running Chrome in a container.
-    command: 'google-chrome --headless=new --remote-debugging-address=0.0.0.0 --remote-debugging-port=9222 --no-sandbox'
+    image: selenium/standalone-chrome:latest
+    shm_size: '2gb'
     ports:
       - "9222:9222"
-    # A larger shared memory size is recommended to prevent Chrome from crashing.
-    shm_size: '2g'
+    environment:
+      - SE_NODE_SESSION_TIMEOUT=180
+      - SE_START_XVFB=false
+      - SE_START_NO_SANDBOX=true
+    volumes:
+      - chrome-data:/home/seluser
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9222/json/version"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
 
   agent:
     build:
-      context: ./agent
+      context: .
+      dockerfile: dockerfiles/almalinux/Dockerfile
     depends_on:
-      - chrome
-    # Mount the Docker socket to allow the agent to start other containers (e.g., sequentialthinking).
+      chrome:
+        condition: service_healthy
+      model-runner:
+        condition: service_healthy
+    environment:
+      - NODE_ENV=production
+      - CHROME_URL=ws://chrome:9222
+      - MODEL_RUNNER_URL=http://model-runner:8080
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-    # Add an entry for host.docker.internal to allow the agent to connect to
-    # the Docker Model Runner running on the host.
+      - agent-data:/app/data
+      - ./agent/mcp.json:/app/mcp.json:ro
     extra_hosts:
       - "host.docker.internal:host-gateway"
-    # Keep the container running so we can exec into it.
     stdin_open: true
     tty: true
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "process.exit(process.uptime() > 30 ? 0 : 1)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  model-runner-data:
+  chrome-data:
+  agent-data:

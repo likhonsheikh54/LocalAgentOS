@@ -1,27 +1,49 @@
 # Use almalinux:minimal as the base image for a smaller footprint
 FROM almalinux:minimal
 
-# Install essential packages, including git and tools for managing archives.
-# Also install ca-certificates for secure connections and xz for decompression.
-RUN microdnf -y install ca-certificates tar gzip git xz && microdnf -y clean all
+# Install essential packages
+RUN microdnf -y install \
+    ca-certificates \
+    curl \
+    tar \
+    gzip \
+    git \
+    xz \
+    make \
+    gcc \
+    gcc-c++ \
+    python3 \
+    python3-pip \
+    && microdnf -y clean all
 
 # Install Node.js 18.x
-# We are downloading the official Node.js binaries, verifying the checksum,
-# and then adding it to the path.
 ARG NODE_VERSION=18.18.0
 RUN curl -O -L https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.xz && \
     tar -xJf node-v${NODE_VERSION}-linux-x64.tar.xz -C /usr/local --strip-components=1 && \
-    rm node-v${NODE_VERSION}-linux-x64.tar.xz
+    rm node-v${NODE_VERSION}-linux-x64.tar.xz && \
+    npm install -g npm@latest
 
-# Verify that Node.js and npm are installed correctly
-RUN node -v && npm -v
+# Install Playwright and its dependencies
+RUN npm init -y && \
+    npm install @playwright/test && \
+    npx playwright install-deps chromium
 
-# Set up the working directory for the agent
+# Set up the working directory
 WORKDIR /app
 
-# Copy the mcp.json configuration file into the agent's filesystem
+# Create data directory
+RUN mkdir -p /app/data
+
+# Copy configuration files
 COPY mcp.json /app/mcp.json
 
-# The default command will be specified in the docker-compose.yml
-# For now, we can set a default command to start a shell.
-CMD ["/bin/bash"]
+# Install MCP dependencies
+RUN npm install @playwright/mcp@latest
+
+# Set environment variables
+ENV NODE_ENV=production \
+    PLAYWRIGHT_BROWSERS_PATH=/app/ms-playwright \
+    CHROME_URL=ws://chrome:9222
+
+# The default command will start the agent
+CMD ["node", "-e", "require('@playwright/mcp').startServer()"]

@@ -20,16 +20,24 @@
         "mcp/sequentialthinking"
       ],
       "env": {
-        "MODEL_RUNNER_URL": "http://model-runner:8080"
+        "MODEL_RUNNER_URL": "http://model-runner:8080",
+        "OPENAI_API_KEY": "${OPENAI_API_KEY}"
       }
     }
   },
   "logging": {
     "level": "debug",
-    "file": "/app/data/agent.log"
+    "file": "/app/data/agent.log",
+    "console": true
   },
   "modelRunner": {
     "url": "http://model-runner:8080",
-    "timeout": 30000
+    "timeout": 30000,
+    "retries": 3
+  },
+  "browser": {
+    "url": "ws://chrome:9222",
+    "timeout": 30000,
+    "retries": 3
   }
 }
