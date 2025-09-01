@@ -2,12 +2,12 @@ version: '3.8'
 
 services:
   model-runner:
-    image: mcp/model-runner:latest
+    image: docker/dev-model-runner:beta
+    platform: linux/arm64  # For Apple Silicon
     ports:
       - "8080:8080"
     environment:
       - LOG_LEVEL=debug
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
     volumes:
       - model-runner-data:/data
     healthcheck:
@@ -48,7 +48,6 @@ services:
       - NODE_ENV=production
       - CHROME_URL=ws://chrome:9222
       - MODEL_RUNNER_URL=http://model-runner:8080
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - agent-data:/app/data

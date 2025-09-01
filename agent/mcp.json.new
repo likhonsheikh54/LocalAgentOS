@@ -20,8 +20,7 @@
         "mcp/sequentialthinking"
       ],
       "env": {
-        "MODEL_RUNNER_URL": "http://model-runner:8080",
-        "OPENAI_API_KEY": "${OPENAI_API_KEY}"
+        "MODEL_RUNNER_URL": "http://model-runner:8080"
       }
     }
   },

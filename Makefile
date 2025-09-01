@@ -61,12 +61,9 @@ test: check-env
 	@echo "✓ Agent is healthy"
 	@echo "\nAll tests passed! ✨"
 
-# Check required environment variables
+# Check Docker Model Runner availability
 check-env:
-	@if [ -z "$(OPENAI_API_KEY)" ]; then \
-		echo "Error: OPENAI_API_KEY environment variable is not set"; \
-		exit 1; \
-	fi
+	@docker info >/dev/null 2>&1 || (echo "Error: Docker is not running" && exit 1)
 
 # Pull latest versions of all images
 pull:
@@ -93,5 +90,6 @@ help:
 	@echo "  make pull        - Pull latest versions of images"
 	@echo "  make update-deps - Update agent dependencies"
 	@echo ""
-	@echo "Environment variables required:"
-	@echo "  OPENAI_API_KEY   - Your OpenAI API key"
+	@echo "Requirements:"
+	@echo "  - Docker Desktop 4.40+ with Model Runner enabled"
+	@echo "  - Apple Silicon Mac (for GPU acceleration)"
