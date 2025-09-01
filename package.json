@@ -1,0 +1,19 @@
+{
+  "name": "localagentos",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "This project demonstrates an AI agent system that leverages Docker Model Runner for local Large Language Model (LLM) inference and Playwright for web interaction.",
+  "main": "agent.js",
+  "scripts": {
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "coverage": "vitest run --coverage"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "playwright": "^1.55.0",
+    "vitest": "^3.2.4"
+  }
+}

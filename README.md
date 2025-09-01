@@ -6,7 +6,7 @@ This project demonstrates an AI agent system that leverages Docker Model Runner 
 
 - **Local LLM Inference:** Utilizes Docker Model Runner to run LLMs locally, eliminating the need for external API keys like OpenAI.
 - **Web Automation:** Employs Playwright to navigate web pages, extract information, and interact with web content.
-- **Autonomous Agent:** The `agent.js` script orchestrates web browsing and LLM interaction to perform predefined tasks.
+- **Autonomous Agent:** The `agent.js` script orchestrates web browsing and LLM interaction to perform predefined tasks using a functional approach.
 
 ## Requirements
 
@@ -43,10 +43,18 @@ This project demonstrates an AI agent system that leverages Docker Model Runner 
     ```
 
 4.  **Run Tests (Optional):**
-    To ensure everything is working correctly, run the integration tests:
+    To ensure everything is working correctly, run the tests using Vitest:
 
     ```bash
-    make test
+    npm test
+    ```
+    Or with UI:
+    ```bash
+    npm run test:ui
+    ```
+    For coverage report:
+    ```bash
+    npm run coverage
     ```
 
 5.  **View Agent Logs:**
@@ -58,21 +66,22 @@ This project demonstrates an AI agent system that leverages Docker Model Runner 
 
 ## Agent Functionality
 
-The `agent.js` script is designed to:
+The `agent.js` script is designed with a functional approach, where individual functions handle specific responsibilities:
 
-1.  **Initialize Browser:** Connects to a headless Chrome instance via Playwright.
-2.  **Monitor Network:** Sets up a CDP session to log network requests.
-3.  **Interact with LLM:** Uses the `MODEL_RUNNER_URL` environment variable to communicate with the Docker Model Runner. It sends predefined prompts to the LLM and logs the responses.
-4.  **Execute Tasks:** The agent has a list of tasks, which can include navigating to URLs or performing analysis. When a task involves an LLM, it sends a prompt and processes the LLM's response.
+1.  **`initializeAgent(chromeUrl)`:** Connects to a headless Chrome instance via Playwright and sets up a CDP session for monitoring network requests.
+2.  **`askLLM(prompt)`:** Communicates with the Docker Model Runner using the `MODEL_RUNNER_URL` environment variable. It sends a prompt to the LLM and returns the response.
+3.  **`analyzeWebPage(page)`:** Extracts information from the current webpage (URL, title, content) and uses `askLLM` to get an analysis from the LLM.
+4.  **`executeTask(page, task)`:** Orchestrates the execution of a given task. It first asks the LLM for a plan and then navigates to a URL if the task includes one, followed by a webpage analysis.
+5.  **`runAgent()`:** The main function that initializes the agent, defines a list of tasks, and executes them sequentially.
 
 ### LLM Interaction Example
 
-The `agent.js` includes an `askLLM` function that sends a POST request to the Docker Model Runner's OpenAI-compatible API endpoint (`/v1/completions`).
+The `askLLM` function sends a POST request to the Docker Model Runner's OpenAI-compatible API endpoint (`/v1/completions`).
 
 ```javascript
-async askLLM(prompt) {
+async function askLLM(prompt) {
   try {
-    const response = await axios.post(`${this.modelRunnerUrl}/v1/completions`, {
+    const response = await axios.post(`${MODEL_RUNNER_URL}/v1/completions`, {
       model: "llama2", // Ensure this model is loaded in your Docker Model Runner
       prompt,
       max_tokens: 1000,
@@ -81,12 +90,12 @@ async askLLM(prompt) {
     return response.data.choices[0].text;
   } catch (error) {
     console.error("Error communicating with Model Runner:", error.message);
-    return null;
+    return undefined; // Using undefined for optional values as per coding standards
   }
 }
 ```
 
-The agent currently sends a predefined prompt to the LLM and logs the response, as per the clarified functionality.
+The agent currently sends predefined prompts to the LLM and logs the responses, as per the clarified functionality.
 
 ## Development
 
