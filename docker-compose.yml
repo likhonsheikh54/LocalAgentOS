@@ -44,24 +44,21 @@ services:
         condition: service_healthy
       model-runner:
         condition: service_healthy
+    services:
+  agent:
+    build:
+      context: .
+      dockerfile: dockerfiles/almalinux/Dockerfile
     environment:
-      - NODE_ENV=production
-      - CHROME_URL=ws://chrome:9222
-      - MODEL_RUNNER_URL=http://model-runner:8080
+      - WORKSPACE_DOMAIN=${WORKSPACE_DOMAIN:-localhost}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - DOCKER_MODEL_RUNNER_BASE_URL=http://model-runner.docker.internal:12434
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - agent-data:/app/data
-      - ./agent/mcp.json:/app/mcp.json:ro
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    stdin_open: true
-    tty: true
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "node", "-e", "process.exit(process.uptime() > 30 ? 0 : 1)"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+      - shared_memory:/dev/shm  # Shared memory for browser automation
+    depends_on:
+      - chrome
+      - model-runner
 
 volumes:
   model-runner-data:
